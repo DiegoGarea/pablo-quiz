@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import questions from '../data/questions';
+import timer from '../assets/timer.png';
 
 const Quiz = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -9,6 +10,7 @@ const Quiz = () => {
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const [seconds, setSeconds] = useState(0);
   const [milliseconds, setMilliseconds] = useState(0);
+  const [quizStartTime, setQuizStartTime] = useState(null);
   const [quizFinished, setQuizFinished] = useState(false);
 
   useEffect(() => {
@@ -16,18 +18,20 @@ const Quiz = () => {
 
     if (quizStarted && !quizFinished) {
       interval = setInterval(() => {
-        setMilliseconds((prevMilliseconds) => prevMilliseconds + 1);
-        if (milliseconds === 999) {
-          setSeconds((prevSeconds) => prevSeconds + 1);
-          setMilliseconds(0);
-        }
+        const currentTime = new Date();
+        const elapsedTime = currentTime - quizStartTime;
+        const seconds = Math.floor(elapsedTime / 1000);
+        const milliseconds = elapsedTime % 1000;
+
+        setSeconds(seconds);
+        setMilliseconds(milliseconds);
       }, 1);
     } else {
       clearInterval(interval);
     }
 
     return () => clearInterval(interval);
-  }, [quizStarted, quizFinished, milliseconds]);
+  }, [quizStarted, quizFinished, quizStartTime]);
 
   const handleNextQuestion = () => {
     if (
@@ -58,13 +62,16 @@ const Quiz = () => {
   };
 
   const startQuiz = () => {
-    const shuffled = questions.sort(() => Math.floor(Math.random() - 0.5));
+    const shuffled = questions
+      .map((item) => ({item, random: Math.random()}))
+      .sort((a, b) => a.random - b.random);
 
-    const shuffledQuestionsWithAnswers = shuffled.map((question) => ({
-      ...question,
-      answerOptions: question.answerOptions.sort(() =>
-        Math.floor(Math.random() - 0.5)
-      ),
+    const shuffledQuestionsWithAnswers = shuffled.map(({item}) => ({
+      ...item,
+      answerOptions: item.answerOptions
+        .map((option) => ({option, random: Math.random()}))
+        .sort((a, b) => a.random - b.random)
+        .map(({option}) => option),
     }));
 
     setShuffledQuestions(shuffledQuestionsWithAnswers);
@@ -75,14 +82,15 @@ const Quiz = () => {
     setIsCorrect(null);
     setSeconds(0);
     setMilliseconds(0);
+    setQuizStartTime(new Date());
   };
-  // console.log(shuffledQuestions);
 
   return (
-    <div className="flex justify-center items-center border-[1px] m-auto w-[80%] p-[120px] shadow-md shadow-black-500/50">
+    <div className="flex justify-center items-center border-[1px] m-auto mt-20 w-[800px] p-[120px] shadow-md shadow-black-500/50">
       {quizStarted ? (
         <div>
-          <div className="text-[20px] mb-4">
+          <div className="flex text-[20px] text-center">
+            <img src={timer} alt="timer" />
             Time: {seconds} sec : {milliseconds} ms
           </div>
           {shuffledQuestions.map(({questionText, answerOptions}, index) => (
@@ -96,7 +104,6 @@ const Quiz = () => {
                 <p className="mx-2 bg-red-700 w-[50px] h-[50px] rounded-full text-center text-white text-[35px]">
                   {currentQuestionIndex + 1}
                 </p>
-
                 <p className="text-gray-400">{questionText}</p>
               </div>
               <div>
@@ -125,9 +132,12 @@ const Quiz = () => {
         </div>
       ) : (
         <div className="bg-red">
-          <div>Obtuviste {currentQuestionIndex} respuestas correctas</div>
-          <div>
-            Tiempo transcurrido: {seconds} segundos : {milliseconds} ms
+          <div className="text-center">
+            Obtuviste {currentQuestionIndex} respuestas correctas
+          </div>
+          <div className="flex text-center">
+            <img src={timer} alt="timer" className="px-[10px]" />
+            Tiempo transcurrido: {seconds}.{milliseconds} segundos
           </div>
           <button
             className="text-[20px] bg-red-700 text-white rounded-sm px-[120px] py-[8px] mt-[20px] hover:bg-red-800"
