@@ -89,9 +89,9 @@ const Quiz = () => {
     <div className="flex justify-center items-center border-[1px] m-auto mt-20 w-[800px] p-[120px] shadow-md shadow-black-500/50">
       {quizStarted ? (
         <div>
-          <div className="flex text-[20px] text-center">
+          <div className="flex text-[20px] text-center mb-10 justify-end">
             <img src={timer} alt="timer" />
-            Time: {seconds} sec : {milliseconds} ms
+            {seconds}.{milliseconds} sec
           </div>
           {shuffledQuestions.map(({questionText, answerOptions}, index) => (
             <div
